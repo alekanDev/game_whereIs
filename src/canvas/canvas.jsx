@@ -6,19 +6,9 @@ const Canvas = (props) => {
   const canvasRef = useRef();
   const selCardRef = useRef(null);
   const initialPos = [408, 655, 902]
-  const newPos = [902, 408, 655]
   const cardWidth = 227;
   const cardHeight = 326;
   const gap = 20;
-
-
-  // const [currentPos, setCurrentPos] = useState([initialPos])
-  // const positions = () => {
-  //   const randomPos = initialPos.sort(() => 0.5 - Math.random())
-  //   setCurrentPos(randomPos)
-  //   return currentPos
-  // }
-
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -26,7 +16,6 @@ const Canvas = (props) => {
 
     const background = new Image();
     background.src = bkg_game;
-
 
     const totalWidth = cardWidth * 3 + gap * 2;
     const startX = (canvas.width - totalWidth) / 2;
@@ -40,29 +29,63 @@ const Canvas = (props) => {
       newCards.push(card)
     }
 
+    const shufflePositions = () => {
+      return [...initialPos].sort(() => 0.5 - Math.random())
+    }
+
+    const getUniquePermutation = () => {
+      const arr = [...initialPos];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    let animationId;
+    let step = 0;
+    let animationStoped = false;
+    let cardHasBeenClicked = false;
+    const interval = 500;
+    let assignedPositions = shufflePositions();
+
     const animate = () => {
-      requestAnimationFrame(animate);
+      if (animationStoped) return;
+
+      animationId = requestAnimationFrame(animate);
+
       context.clearRect(0, 0, canvas.width, canvas.height)
       context.drawImage(background, 0, 0, canvas.width, canvas.height)
 
-      const testCard = newCards[1]
-
-      testCard.paint();
-
-      
-      testCard.shuffleCards(newPos[2]);
-
-      // newCards.forEach((card, index) => {
-      //   if (card === selCardRef.current) {
-      //     card.animateSpecial();
-      //   } else {
-      //     card.updated(initialPos[index], newPos[index]);
-      //   }
-      // })
+      newCards.forEach((card, index) => {
+        if (card === selCardRef.current) {
+          card.animateSpecial();
+        } else {
+          card.updated(assignedPositions[index]);
+        }
+      })
     }
+
+    const updateCardsToNewPositions = () => {
+      assignedPositions = getUniquePermutation();
+    };
+
+    const positionInterval = setInterval(() => {
+      updateCardsToNewPositions();
+      step++
+
+      if (step >= 5) {
+        clearInterval(positionInterval)
+        animationStoped = true
+        cancelAnimationFrame(animationId)
+        console.log("Animación detenida")
+      }
+    }, interval)
+
     background.onload = animate;
 
     const handleClick = (e) => {
+      if (!animationStoped || cardHasBeenClicked) return;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -71,14 +94,44 @@ const Canvas = (props) => {
         x >= card.x &&
         x <= card.x + card.width &&
         y >= card.y &&
-        y <= card.y + card.heigth
+        y <= card.y + card.height
       )
 
       if (clicked) {
-        selCardRef.current = clicked
-        console.log(clicked)
+        cardHasBeenClicked = true;
+        selCardRef.current = clicked;
+        clicked.closing = true;
+        clicked.currentWidth = clicked.width;
+        const index = newCards.findIndex(card => card === clicked)
+        newAnimation(index)
       }
     }
+
+    const newAnimation = (index) => {
+      const selected = newCards[index];
+      let frameId;
+
+      const animateMove = () => {
+        // context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+        selected.animateSpecial();
+        selected.paint();
+
+        newCards.forEach((card, index) => {
+          if (card === selCardRef.current && card.closing) {
+            card.animateSpecial();
+          } else {
+            card.updated(assignedPositions[index]);
+          }
+        });
+
+        frameId = requestAnimationFrame(animateMove);
+      };
+
+      animateMove();
+    }
+
     canvas.addEventListener('click', handleClick)
     return () => canvas.removeEventListener('click', handleClick)
   }, [])

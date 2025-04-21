@@ -2,25 +2,34 @@ import card_img from '../../assets/default_card.png'
 
 export default class Card {
   constructor(x, y, context, canvas) {
-    this.width = 227;
-    this.heigth = 326;
+
+    const isMobile = window.innerWidth <= 768;
+    console.log(isMobile)
+
+    this.width = isMobile ? 280 : 227;
+    this.height = isMobile ? 150 : 326;
 
     this.card = new Image();
     this.card.src = card_img;
-    this.speed = 10;
+    this.speed = 20;
 
     this.x = x;
     this.y = y;
     this.context = context;
     this.canvas = canvas;
+
+    this.closing = false;
+    this.currentWidth = this.width;
   }
 
   paint() {
+    if (this.width <= 0) return; // Ya colapsó
+
     if (this.card.complete) {
-      this.context.drawImage(this.card, this.x, this.y, this.width, this.heigth);
+      this.context.drawImage(this.card, this.x, this.y, this.width, this.height);
     } else {
       this.card.onload = () => {
-        this.context.drawImage(this.card, this.x, this.y, this.width, this.heigth);
+        this.context.drawImage(this.card, this.x, this.y, this.width, this.height);
       }
     }
   }
@@ -32,56 +41,24 @@ export default class Card {
     } else if (this.x < 408) {
       this.speed = -this.speed
     }
-
-    // if (this.x < setPos) {
-    //   this.x += this.speed;
-    // } else {
-    //   this.speed = 0
-    // }
-
   }
-
-
 
   shuffleCards(newPos) {
-    if (this.x < newPos) {
-      this.x += this.speed;
-      if (this.x === newPos) {
-        this.speed = 0;
-      }
-    }
-    if (this.x > newPos) {
-      this.x -= this.speed;
-      if (this.x === newPos) {
-        this.speed = 0;
-      }
-    }
-    // console.log(this.x)
+    const distance = newPos - this.x;
 
-    // if (this.x === currentPos && this.x > newPos) {
-    //   this.x -= this.speed
-    // } else if (this.x === currentPos && this.x < newPos) {
-    //   this.x += this.speed
-    // } else {
-    //   this.x = 0
-    // }
-  }
-
-  rotate() {
-    this.x -= this.speed
+    if (Math.abs(distance) <= this.speed) {
+      this.x = newPos;
+    } else {
+      this.x += this.speed * Math.sign(distance);
+    }
   }
 
   animateSpecial() {
-    this.context.save();
-    this.context.globalAlpha = 0.5;
-    this.paint();
-    this.context.restore();
-
+   this.x -= this.speed;
   }
 
-  updated(currentPos, newPos) {
-    // this.move();
-    this.shuffleCards(currentPos, newPos);
+  updated(newPos) {
     this.paint();
+    this.shuffleCards(newPos);
   }
 }
