@@ -1,4 +1,5 @@
 import card_img from '../../assets/default_card.png'
+import card_img_win from '../../assets/succsess_card.png'
 
 export default class Card {
   constructor(x, y, context, canvas) {
@@ -20,17 +21,17 @@ export default class Card {
 
     this.closing = false;
     this.currentWidth = this.width;
+
+    this.backCard = new Image();
+    this.backCard.src = card_img_win;
+    this.showBack = false;
   }
 
   paint() {
-    if (this.width <= 0) return; // Ya colapsó
-
-    if (this.card.complete) {
-      this.context.drawImage(this.card, this.x, this.y, this.width, this.height);
-    } else {
-      this.card.onload = () => {
-        this.context.drawImage(this.card, this.x, this.y, this.width, this.height);
-      }
+    const imgToDraw = this.showBack ? this.backCard : this.card;
+  
+    if (imgToDraw.complete && imgToDraw.naturalWidth !== 0) {
+      this.context.drawImage(imgToDraw, this.x, this.y, this.width, this.height);
     }
   }
 
@@ -54,7 +55,32 @@ export default class Card {
   }
 
   animateSpecial() {
-   this.x -= this.speed;
+    // Si se está cerrando (colapsando)
+    if (this.closing) {
+      if (this.currentWidth > 0) {
+        this.currentWidth -= 20; // velocidad de colapso
+      } else {
+        this.closing = false;
+        this.showBack = !this.showBack;
+        this.currentWidth = 0; // reinicia para comenzar a expandirse
+      }
+    } else {
+      // Si ya se volteó, empieza a expandirse
+      if (this.currentWidth < this.width) {
+        this.currentWidth += 20; // velocidad de apertura
+      }
+    }
+
+    // Calcular posición centrada durante el cambio de ancho
+    const centerX = this.x + this.width / 2;
+    const drawX = centerX - this.currentWidth / 2;
+
+    const imgToDraw = this.showBack ? this.backCard : this.card;
+
+    // Asegurarse de que la imagen está completamente cargada antes de dibujar
+    if (imgToDraw.complete && imgToDraw.naturalWidth !== 0) {
+      this.context.drawImage(imgToDraw, drawX, this.y, this.currentWidth, this.height);
+    }
   }
 
   updated(newPos) {

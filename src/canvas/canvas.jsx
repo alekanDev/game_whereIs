@@ -116,13 +116,12 @@ const Canvas = (props) => {
         context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
         selected.animateSpecial();
-        selected.paint();
 
         newCards.forEach((card, index) => {
           if (card === selCardRef.current && card.closing) {
             card.animateSpecial();
           } else {
-            card.updated(assignedPositions[index]);
+            card.paint(assignedPositions[index]);
           }
         });
 
