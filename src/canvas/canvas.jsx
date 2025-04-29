@@ -13,6 +13,7 @@ const Canvas = (props) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
+    // const winnerIndex = Math.floor(Math.random() * 3)
 
     const background = new Image();
     background.src = bkg_game;
@@ -24,8 +25,9 @@ const Canvas = (props) => {
     const newCards = []
 
     for (let i = 0; i < 3; i++) {
-      const x = startX + i * (cardWidth + gap)
-      const card = new Card(x, y, context, canvas)
+      const x = startX + i * (cardWidth + gap);
+      const isWinner = i === winnerIndex;
+      const card = new Card(x, y, context, canvas);
       newCards.push(card)
     }
 

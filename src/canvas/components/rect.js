@@ -1,5 +1,6 @@
 import card_img from '../../assets/default_card.png'
 import card_img_win from '../../assets/succsess_card.png'
+import card_img_lose from '../../assets/try_card.png'
 
 export default class Card {
   constructor(x, y, context, canvas) {
@@ -12,7 +13,13 @@ export default class Card {
 
     this.card = new Image();
     this.card.src = card_img;
-    this.speed = 20;
+
+    this.backCard = newImage();
+    this.backCard.src = isWinner ? card_img_win : card_img_lose
+
+    this.showBack = false;
+    // this.isWinner = this.isWinner;
+
 
     this.x = x;
     this.y = y;
@@ -21,15 +28,12 @@ export default class Card {
 
     this.closing = false;
     this.currentWidth = this.width;
-
-    this.backCard = new Image();
-    this.backCard.src = card_img_win;
-    this.showBack = false;
+    this.speed = 20;
   }
 
   paint() {
     const imgToDraw = this.showBack ? this.backCard : this.card;
-  
+
     if (imgToDraw.complete && imgToDraw.naturalWidth !== 0) {
       this.context.drawImage(imgToDraw, this.x, this.y, this.width, this.height);
     }
